@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   Button,
   Chip,
@@ -22,7 +23,7 @@ import {
   getKeyValue,
   useDisclosure,
 } from "@nextui-org/react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AiOutlineStop } from "react-icons/ai";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { CiSearch } from "react-icons/ci";
@@ -31,18 +32,33 @@ import { IoMdAdd } from "react-icons/io";
 import { RiDeleteBin6Fill } from "react-icons/ri";
 import DatePicker from "react-datepicker";
 
+import {
+  GetPelanggaran,
+  GetListPelanggaran,
+  GetSanksi,
+  CreatePelanggaran,
+  UpdatePelanggaran,
+  GetPelanggaranById,
+  DeletePelanggaran,
+} from "../../api/apiPelanggaran";
+
 const PelanggaranPage = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [currentId, setCurrentId] = useState(null);
+  const [dataPelanggaran, setDataPelanggaran] = useState([]);
+  const [listPelanggaran, setListPelanggaran] = useState([]);
+  const [listSanksi, setListSanksi] = useState([]);
   const [currentPelanggaranData, setCurrentPelanggaranData] = useState({
-    namaSiswa: "",
+    nama_siswa: "",
     kelas: "",
-    programKeahlian: "",
-    guruBK: "",
-    pelanggaran: "",
+    program_keahlian: "",
+    nama_guru_bk: "",
+    id_list_pelanggaran: "",
     kategori: "",
+    jenis_sanksi: "",
     sanksi: "",
+    tanggal_pelanggaran: "",
   });
   const rowsPerPage = 5;
 
@@ -65,44 +81,21 @@ const PelanggaranPage = () => {
   } = useDisclosure();
 
   const columns = [
-    { key: "namaSiswa", label: "Nama Siswa" },
+    { key: "nama_siswa", label: "Nama Siswa" },
     { key: "kelas", label: "Kelas" },
-    { key: "programKeahlian", label: "Program Keahlian" },
-    { key: "guruBK", label: "Guru BK" },
+    { key: "program_keahlian", label: "Program Keahlian" },
+    { key: "nama_guru_bk", label: "Guru BK" },
     { key: "pelanggaran", label: "Pelanggaran" },
     { key: "kategori", label: "Kategori" },
     { key: "sanksi", label: "Sanksi" },
     { key: "actions", label: "ACTIONS" },
   ];
 
-  const rows = [
-    {
-      key: 1,
-      namaSiswa: "John Doe",
-      kelas: "12A",
-      programKeahlian: "Teknik Informatika",
-      guruBK: "Mr. Smith",
-      pelanggaran: "Menyontek",
-      kategori: "Ringan",
-      sanksi: "Teguran",
-    },
-    {
-      key: 2,
-      namaSiswa: "Jane Doe",
-      kelas: "11B",
-      programKeahlian: "Teknik Mesin",
-      guruBK: "Ms. Johnson",
-      pelanggaran: "Terlambat",
-      kategori: "Sedang",
-      sanksi: "Pelayanan Masyarakat",
-    },
-  ];
-
-  const filteredRows = rows.filter((row) =>
+  const filteredRows = dataPelanggaran.filter((dataPelanggaran) =>
     columns.some(
       (column) =>
-        typeof row[column.key] === "string" &&
-        row[column.key].toLowerCase().includes(search.toLowerCase())
+        typeof dataPelanggaran[column.key] === "string" &&
+        dataPelanggaran[column.key].toLowerCase().includes(search.toLowerCase())
     )
   );
 
@@ -111,31 +104,132 @@ const PelanggaranPage = () => {
   const paginatedRows = filteredRows.slice(startIndex, endIndex);
 
   const jenisSanksi = [
-    { label: "diri", value: "Bakti Diri" },
-    { label: "wiyata", value: "Bakti Wiyata Mandala" },
-  ];
-
-  const sanksi = [
-    { label: "sanksi1", value: "Membersihkan Taman" },
-    { label: "sanksi2", value: "Membersihkan Toilet" },
-    { label: "sanksi3", value: "Menyiram Tanaman" },
-    { label: "sanksi4", value: "Push up 10x" },
+    { label: "Bakti Diri", value: "Bakti Diri" },
+    { label: "Bakti Wiyata Mandala", value: "Bakti Wiyata Mandala" },
   ];
 
   const handleEdit = (currentId) => {
     setCurrentId(currentId);
-    setCurrentPelanggaranData({
-      namaSiswa: rows[currentId].namaSiswa,
-      kelas: rows[currentId].kelas,
-      programKeahlian: rows[currentId].programKeahlian,
-      guruBK: rows[currentId].guruBK,
-      pelanggaran: rows[currentId].pelanggaran,
-      kategori: rows[currentId].kategori,
-      sanksi: rows[currentId].sanksi,
-    });
+
+    GetPelanggaranById(currentId)
+      .then((res) => {
+        setCurrentPelanggaranData({
+          nama_siswa: res.nama_siswa,
+          kelas: res.kelas,
+          program_keahlian: res.program_keahlian,
+          nama_guru_bk: res.nama_guru_bk,
+          id_list_pelanggaran: res.id_list_pelanggaran,
+          kategori: res.list_pelanggaran.kategori.nama_kategori,
+          jenis_sanksi: res.jenis_sanksi,
+          sanksi: res.sanksi,
+          tanggal_pelanggaran: res.tanggal_pelanggaran,
+        });
+        console.log(res);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+
     console.log(currentId);
     openCreateModal();
   };
+
+  // Get Data Pelanggaran
+  const GetDataPelanggaran = () => {
+    GetPelanggaran()
+      .then((res) => {
+        setDataPelanggaran(res);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  // Get List Pelanggaran
+  const getListPelanggaran = () => {
+    GetListPelanggaran()
+      .then((res) => {
+        setListPelanggaran(res);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  const handleDeleteSeason = (id) => {
+    DeletePelanggaran(id)
+      .then((res) => {
+        console.log(res);
+        GetDataPelanggaran();
+        closeDeleteModal();
+        setCurrentId(null);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+  // Get List Sanksi by Filter
+  const getDataSanksi = (jenis_sanksi, kategori) => {
+    GetSanksi(jenis_sanksi, kategori)
+      .then((res) => {
+        setListSanksi(res);
+        console.log(res);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+  // Create Pelanggaran
+  const handleCreate = () => {
+    CreatePelanggaran(currentPelanggaranData)
+      .then((res) => {
+        console.log(res);
+        GetDataPelanggaran();
+        closeCreateModal();
+        setCurrentPelanggaranData({
+          nama_siswa: "",
+          kelas: "",
+          program_keahlian: "",
+          nama_guru_bk: "",
+          id_list_pelanggaran: "",
+          kategori: "",
+          jenis_sanksi: "",
+          sanksi: "",
+          tanggal_pelanggaran: "",
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+  // Update Pelanggaran
+  const handleUpdate = (id) => {
+    UpdatePelanggaran(id, currentPelanggaranData)
+      .then((res) => {
+        console.log(res);
+        GetDataPelanggaran();
+        closeCreateModal();
+        setCurrentPelanggaranData({
+          nama_siswa: "",
+          kelas: "",
+          program_keahlian: "",
+          nama_guru_bk: "",
+          id_list_pelanggaran: "",
+          kategori: "",
+          jenis_sanksi: "",
+          sanksi: "",
+          tanggal_pelanggaran: "",
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  useEffect(() => {
+    GetDataPelanggaran();
+    getListPelanggaran();
+  }, []);
 
   return (
     <section>
@@ -164,6 +258,7 @@ const PelanggaranPage = () => {
           Tambah
         </button>
       </div>
+
       <div className="mt-8">
         <Table
           aria-label="Tabel Pelanggaran"
@@ -200,51 +295,69 @@ const PelanggaranPage = () => {
               <TableRow key={row.key}>
                 {columns.map((column) => (
                   <TableCell className="text-medium" key={column.key}>
-                    {column.key === "kategori" ? (
-                      <Chip
-                        className={
-                          row[column.key] === "Ringan"
-                            ? "bg-success-500 text-white"
-                            : row[column.key] === "Sedang"
-                            ? "bg-warning-500 text-white"
-                            : "bg-danger-500 text-white"
-                        }
-                      >
-                        {row[column.key]}
-                      </Chip>
-                    ) : column.key === "actions" ? (
-                      <div className="relative flex items-center">
-                        <Dropdown>
-                          <DropdownTrigger>
-                            <Button isIconOnly size="sm" variant="light">
-                              <BsThreeDotsVertical className="text-default-500" />
-                            </Button>
-                          </DropdownTrigger>
-                          <DropdownMenu>
-                            <DropdownItem
-                              color="warning"
-                              startContent={<FaEdit />}
-                              onClick={() => {
-                                handleEdit(row.key - 1);
-                              }}
+                    {(() => {
+                      switch (column.key) {
+                        case "kategori":
+                          return (
+                            <Chip
+                              className={
+                                row.list_pelanggaran.kategori.nama_kategori ===
+                                "RINGAN"
+                                  ? "bg-success-500 text-white"
+                                  : row.list_pelanggaran.kategori
+                                      .nama_kategori === "SEDANG"
+                                  ? "bg-warning-500 text-white"
+                                  : "bg-danger-500 text-white"
+                              }
                             >
-                              Edit
-                            </DropdownItem>
-                            <DropdownItem
-                              color="danger"
-                              startContent={<RiDeleteBin6Fill />}
-                              onClick={() => {
-                                openDeleteModal();
-                              }}
-                            >
-                              Hapus
-                            </DropdownItem>
-                          </DropdownMenu>
-                        </Dropdown>
-                      </div>
-                    ) : (
-                      row[column.key]
-                    )}
+                              {row.list_pelanggaran.kategori.nama_kategori}
+                            </Chip>
+                          );
+                        case "pelanggaran":
+                          return row.list_pelanggaran.pelanggaran;
+
+                        case "actions":
+                          return (
+                            <div className="relative flex items-center">
+                              <Dropdown>
+                                <DropdownTrigger>
+                                  <Button isIconOnly size="sm" variant="light">
+                                    <BsThreeDotsVertical className="text-default-500" />
+                                  </Button>
+                                </DropdownTrigger>
+                                <DropdownMenu>
+                                  <DropdownItem
+                                    color="warning"
+                                    startContent={<FaEdit />}
+                                    onClick={() => {
+                                      handleEdit(row.id);
+                                    }}
+                                  >
+                                    Edit
+                                  </DropdownItem>
+                                  <DropdownItem
+                                    color="danger"
+                                    startContent={<RiDeleteBin6Fill />}
+                                    onClick={() => {
+                                      openDeleteModal();
+                                      setCurrentId(row.id);
+                                    }}
+                                  >
+                                    Hapus
+                                  </DropdownItem>
+                                </DropdownMenu>
+                              </Dropdown>
+                            </div>
+                          );
+
+                        default:
+                          return column.key.includes(".")
+                            ? column.key
+                                .split(".")
+                                .reduce((obj, key) => obj[key], row)
+                            : row[column.key];
+                      }
+                    })()}
                   </TableCell>
                 ))}
               </TableRow>
@@ -270,11 +383,11 @@ const PelanggaranPage = () => {
                 type="text"
                 label="Nama Siswa"
                 variant="bordered"
-                value={currentPelanggaranData.namaSiswa}
+                value={currentPelanggaranData.nama_siswa}
                 onChange={(e) => {
                   setCurrentPelanggaranData({
                     ...currentPelanggaranData,
-                    namaSiswa: e.target.value,
+                    nama_siswa: e.target.value,
                   });
                 }}
               />
@@ -298,11 +411,11 @@ const PelanggaranPage = () => {
                 type="text"
                 label="Program Keahlian"
                 variant="bordered"
-                value={currentPelanggaranData.programKeahlian}
+                value={currentPelanggaranData.program_keahlian}
                 onChange={(e) => {
                   setCurrentPelanggaranData({
                     ...currentPelanggaranData,
-                    programKeahlian: e.target.value,
+                    program_keahlian: e.target.value,
                   });
                 }}
               />
@@ -312,29 +425,56 @@ const PelanggaranPage = () => {
                 type="text"
                 label="Guru BK"
                 variant="bordered"
-                value={currentPelanggaranData.guruBK}
+                value={currentPelanggaranData.nama_guru_bk}
                 onChange={(e) => {
                   setCurrentPelanggaranData({
                     ...currentPelanggaranData,
-                    guruBK: e.target.value,
+                    nama_guru_bk: e.target.value,
                   });
                 }}
               />
             </div>
             <div className="mb-2">
-              <Textarea
-                type="text"
-                label="Pelanggaran"
+              <Input
+                type="date"
                 variant="bordered"
-                value={currentPelanggaranData.pelanggaran}
+                value={currentPelanggaranData.tanggal_pelanggaran}
                 onChange={(e) => {
                   setCurrentPelanggaranData({
                     ...currentPelanggaranData,
-                    pelanggaran: e.target.value,
+                    tanggal_pelanggaran: e.target.value,
                   });
                 }}
               />
             </div>
+            {/* Dropdown List Pelanggaran */}
+            <div className="mb-2">
+              <select
+                value={currentPelanggaranData.id_list_pelanggaran}
+                className="border-2 border-gray-200 py-4 px-2 rounded-lg w-full cursor-pointer text-sm"
+                onChange={(e) => {
+                  const selectedPelanggaran = listPelanggaran.find(
+                    (js) => js.id === parseInt(e.target.value)
+                  );
+
+                  setCurrentPelanggaranData({
+                    ...currentPelanggaranData,
+                    id_list_pelanggaran: e.target.value,
+                    kategori: selectedPelanggaran.kategori.nama_kategori,
+                  });
+                }}
+              >
+                <option hidden className="text-gray-200">
+                  Pilih Pelanggaran
+                </option>
+                {listPelanggaran.map((js) => (
+                  <option value={js.id} key={js.id}>
+                    {js.pelanggaran}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* Kategori */}
             <div className="mb-2">
               <Input
                 disabled
@@ -347,18 +487,29 @@ const PelanggaranPage = () => {
                     ...currentPelanggaranData,
                     kategori: e.target.value,
                   });
+
+                  getDataSanksi(
+                    currentPelanggaranData.jenis_sanksi,
+                    e.target.value
+                  );
                 }}
               />
             </div>
+            {/* Jenis Sanksi */}
             <div className="mb-2">
               <select
-                value={currentPelanggaranData.kategori}
+                value={currentPelanggaranData.jenis_sanksi}
                 className="border-2 border-gray-200 py-4 px-2 rounded-lg w-full cursor-pointer text-sm"
                 onChange={(e) => {
                   setCurrentPelanggaranData({
                     ...currentPelanggaranData,
-                    kategori: e.target.value,
+                    jenis_sanksi: e.target.value,
                   });
+
+                  getDataSanksi(
+                    e.target.value,
+                    currentPelanggaranData.kategori
+                  );
                 }}
               >
                 <option hidden className="text-gray-200">
@@ -371,9 +522,10 @@ const PelanggaranPage = () => {
                 ))}
               </select>
             </div>
+            {/* Sanksi */}
             <div className="mb-2">
               <select
-                value={currentPelanggaranData.sanksi}
+                value={currentPelanggaranData.jenis}
                 className="border-2 border-gray-200 py-4 px-2 rounded-lg w-full cursor-pointer text-sm"
                 onChange={(e) => {
                   setCurrentPelanggaranData({
@@ -385,9 +537,10 @@ const PelanggaranPage = () => {
                 <option hidden className="text-gray-200">
                   Pilih Sanksi
                 </option>
-                {sanksi.map((js) => (
-                  <option value={js.label} key={js.label}>
-                    {js.value}
+
+                {listSanksi.map((js) => (
+                  <option value={js.sanksi} key={js.id}>
+                    {js.sanksi}
                   </option>
                 ))}
               </select>
@@ -415,13 +568,13 @@ const PelanggaranPage = () => {
             </button>
             <button
               className="btn btn-primary h-[40px] rounded-md"
-              //   onClick={() => {
-              //     if (currentId) {
-              //       openEditModal();
-              //     } else {
-              //       openCreateModal();
-              //     }
-              //   }}
+              onClick={() => {
+                if (currentId) {
+                  handleUpdate(currentId);
+                } else {
+                  handleCreate();
+                }
+              }}
             >
               {!currentId ? <IoMdAdd className="mr-2" /> : null}
               {currentId ? "Ubah" : "Tambah"}
@@ -430,6 +583,7 @@ const PelanggaranPage = () => {
         </ModalContent>
       </Modal>
 
+      {/* Modal Delete */}
       <Modal isOpen={deleteModalOpen} onOpenChange={onDeleteModalOpenChange}>
         <ModalContent>
           <ModalHeader>Hapus Pelanggaran</ModalHeader>
@@ -445,7 +599,7 @@ const PelanggaranPage = () => {
             </button>
             <button
               className="btn btn-primary h-[40px] rounded-md"
-              //   onClick={() => handleDeleteSeason(seasonToDelete.id)}
+              onClick={() => handleDeleteSeason(currentId)}
             >
               Hapus
             </button>
