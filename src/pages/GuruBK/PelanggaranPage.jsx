@@ -89,6 +89,7 @@ const PelanggaranPage = () => {
       sanksi: "",
       tanggal_pelanggaran: "",
     });
+    setListSanksi([]);
   };
 
   const {
@@ -122,8 +123,8 @@ const PelanggaranPage = () => {
   const paginatedRows = filteredRows.slice(startIndex, endIndex);
 
   const jenisSanksi = [
-    { label: "Bakti Diri", value: "Bakti Diri" },
-    { label: "Bakti Wiyata Mandala", value: "Bakti Wiyata Mandala" },
+    { id:1, label: "Bakti_Diri", value: "Bakti Diri" },
+    { id:2, label: "Bakti_Wiyata_Mandala", value: "Bakti Wiyata Mandala" },
   ];
 
   const handleEdit = (currentId) => {
@@ -137,7 +138,7 @@ const PelanggaranPage = () => {
           kelas: res.kelas,
           program_keahlian: res.program_keahlian,
           nama_guru_bk: res.nama_guru_bk,
-          id_list_pelanggaran: res.id_list_pelanggaran,
+          id_list_pelanggaran: new Set([res.id_list_pelanggaran.toString()]),
           kategori: res.list_pelanggaran.kategori.nama_kategori,
           jenis_sanksi: res.jenis_sanksi,
           sanksi: res.sanksi,
@@ -151,6 +152,14 @@ const PelanggaranPage = () => {
 
     console.log(currentId);
     openCreateModal();
+  };
+
+  const findSanksi = (id) => {
+    const findListSanksi = listSanksi.find((sanksi) => sanksi.id == id);
+    console.log(listSanksi);
+    console.log(findListSanksi);
+    console.log(id);
+    return findListSanksi.sanksi;
   };
 
   // Get Data Pelanggaran
@@ -204,30 +213,40 @@ const PelanggaranPage = () => {
   };
   // Create Pelanggaran
   const handleCreate = () => {
-    CreatePelanggaran(currentPelanggaranData)
-      .then((res) => {
-        console.log(res);
-        GetDataPelanggaran();
-        closeCreateModal();
-        clearModal();
-        toast.success("Data berhasil ditambahkan")
+     console.log(currentPelanggaranData)
+      CreatePelanggaran({
+        ...currentPelanggaranData,
+
+        sanksi: findSanksi(currentPelanggaranData.sanksi),
       })
-      .catch((err) => {
-        toast.error(err.message)
-      });
+        .then((res) => {
+          console.log(res);
+          GetDataPelanggaran();
+          closeCreateModal();
+          clearModal();
+          toast.success("Data berhasil ditambahkan");
+        })
+        .catch((err) => {
+          toast.error(err.message);
+          clearModal();
+        });
   };
   // Update Pelanggaran
   const handleUpdate = (id) => {
-    UpdatePelanggaran(id, currentPelanggaranData)
+    UpdatePelanggaran(id, {
+      ...currentPelanggaranData,
+      sanksi: findSanksi(currentPelanggaranData.sanksi),
+    })
       .then((res) => {
         console.log(res);
         GetDataPelanggaran();
         closeCreateModal();
         clearModal();
-        toast.success(res.message)
+        toast.success(res.message);
       })
       .catch((err) => {
-        toast.error(err.message)
+        toast.error(err.message);
+        clearModal();
       });
   };
 
@@ -465,6 +484,7 @@ const PelanggaranPage = () => {
                 selectedKeys={currentPelanggaranData.id_list_pelanggaran}
                 className={{ listboxWrapper: "max-h-[400px]" }}
                 variant="bordered"
+                label="list Pelanggaran "
                 onSelectionChange={(e) => {
                   const selectedPelanggaran = listPelanggaran.find(
                     (js) => js.id === parseInt(e.currentKey)
@@ -478,7 +498,6 @@ const PelanggaranPage = () => {
                 }}
               >
                 {listPelanggaran.map((js) => (
-                  console.log(js),
                   <SelectItem key={js.id}>{js.pelanggaran}</SelectItem>
                 ))}
               </Select>
@@ -517,7 +536,6 @@ const PelanggaranPage = () => {
                 variant="bordered"
                 value={currentPelanggaranData.kategori}
                 onChange={(e) => {
-
                   setCurrentPelanggaranData({
                     ...currentPelanggaranData,
                     kategori: e.target.value,
@@ -532,31 +550,27 @@ const PelanggaranPage = () => {
             </div>
             {/* Jenis Sanksi */}
             <div className="mb-2">
-              {/* <Select
+              <Select
                 items={jenisSanksi}
+                label="Jenis Sanksi"
                 placeholder="Pilih Jenis Sanksi"
                 selectedKeys={currentPelanggaranData.jenis_sanksi}
                 variant="bordered"
+                isDisabled={currentPelanggaranData.id_list_pelanggaran === ""}
                 onSelectionChange={(e) => {
-                  console.log(e);
                   setCurrentPelanggaranData({
                     ...currentPelanggaranData,
-                    jenis_sanksi: e.label,
+                    jenis_sanksi: e.currentKey,
                   });
 
-                  getDataSanksi(
-                    e.label,
-                    currentPelanggaranData.kategori
-                  );
+                  getDataSanksi(e.currentKey, currentPelanggaranData.kategori);
                 }}
               >
                 {jenisSanksi.map((js) => (
-                  <SelectItem key={js.id}>
-                    {js.value}
-                  </SelectItem>
+                  <SelectItem key={js.id}>{js.value}</SelectItem>
                 ))}
-              </Select> */}
-              <select
+              </Select>
+              {/* <select
                 value={currentPelanggaranData.jenis_sanksi}
                 className="border-2 border-gray-200 py-4 px-2 rounded-lg w-full cursor-pointer text-sm"
                 onChange={(e) => {
@@ -579,11 +593,33 @@ const PelanggaranPage = () => {
                     {js.value}
                   </option>
                 ))}
-              </select>
+              </select> */}
             </div>
             {/* Sanksi */}
+
             <div className="mb-2">
-              <select
+              <Select
+                items={listSanksi}
+                label="List Sanksi"
+                placeholder="Pilih List Sanksi"
+                selectedKeys={currentPelanggaranData.sanksi}
+                variant="bordered"
+                isDisabled={
+                  currentPelanggaranData.id_list_pelanggaran === "" ||
+                  currentPelanggaranData.jenis_sanksi === ""
+                }
+                onSelectionChange={(e) => {
+                  setCurrentPelanggaranData({
+                    ...currentPelanggaranData,
+                    sanksi: e.currentKey,
+                  });
+                }}
+              >
+                {listSanksi.map((js) => (
+                  <SelectItem key={js.id}>{js.sanksi}</SelectItem>
+                ))}
+              </Select>
+              {/* <select
                 value={currentPelanggaranData.jenis}
                 className="border-2 border-gray-200 py-4 px-2 rounded-lg w-full cursor-pointer text-sm"
                 onChange={(e) => {
@@ -602,7 +638,7 @@ const PelanggaranPage = () => {
                     {js.sanksi}
                   </option>
                 ))}
-              </select>
+              </select> */}
             </div>
           </ModalBody>
 

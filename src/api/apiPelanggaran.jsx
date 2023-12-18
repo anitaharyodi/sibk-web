@@ -56,9 +56,11 @@ export const CreatePelanggaran = async (data) => {
 };
 
 export const UpdatePelanggaran = async (id, data) => {
+  console.log(data);
+  const id_list = [...data.id_list_pelanggaran];
   try {
     const response = await useAxios.put(`/pelanggaran/${id}`, {
-      id_list_pelanggaran: data.id_list_pelanggaran,
+      id_list_pelanggaran: id_list[0],
       nama_guru_bk: data.nama_guru_bk,
       nama_siswa: data.nama_siswa,
       kelas: data.kelas,
@@ -66,6 +68,7 @@ export const UpdatePelanggaran = async (id, data) => {
       tanggal_pelanggaran: data.tanggal_pelanggaran,
       sanksi: data.sanksi,
     });
+    
     return response.data;
   } catch (error) {
     throw error.response.data;
