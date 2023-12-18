@@ -46,6 +46,7 @@ import {
 } from "../../api/apiPelanggaran";
 
 const PelanggaranPage = () => {
+  const namaKaryawan = sessionStorage.getItem("namaKaryawan");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [currentId, setCurrentId] = useState(null);
@@ -68,6 +69,7 @@ const PelanggaranPage = () => {
 
   const onClear = React.useCallback(() => {
     setSearch("");
+    setPage(1);
   }, []);
 
   const {
@@ -111,11 +113,21 @@ const PelanggaranPage = () => {
   ];
 
   const filteredRows = dataPelanggaran.filter((dataPelanggaran) =>
-    columns.some(
-      (column) =>
+    columns.some((column) => {
+      if (column.key === "kategori" && dataPelanggaran.list_pelanggaran) {
+        const nestedData = dataPelanggaran.list_pelanggaran.kategori;
+        return (
+          nestedData &&
+          typeof nestedData.nama_kategori === "string" &&
+          nestedData.nama_kategori.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+
+      return (
         typeof dataPelanggaran[column.key] === "string" &&
         dataPelanggaran[column.key].toLowerCase().includes(search.toLowerCase())
-    )
+      );
+    })
   );
 
   const startIndex = (page - 1) * rowsPerPage;
@@ -123,8 +135,8 @@ const PelanggaranPage = () => {
   const paginatedRows = filteredRows.slice(startIndex, endIndex);
 
   const jenisSanksi = [
-    { id:1, label: "Bakti_Diri", value: "Bakti Diri" },
-    { id:2, label: "Bakti_Wiyata_Mandala", value: "Bakti Wiyata Mandala" },
+    { id: 1, label: "Bakti_Diri", value: "Bakti Diri" },
+    { id: 2, label: "Bakti_Wiyata_Mandala", value: "Bakti Wiyata Mandala" },
   ];
 
   const handleEdit = (currentId) => {
@@ -193,11 +205,11 @@ const PelanggaranPage = () => {
         GetDataPelanggaran();
         closeDeleteModal();
         setCurrentId(null);
-        toast.success(res.message)
+        toast.success(res.message);
       })
       .catch((err) => {
         console.log(err);
-        toast.error(err.message)
+        toast.error(err.message);
       });
   };
   // Get List Sanksi by Filter
@@ -213,23 +225,23 @@ const PelanggaranPage = () => {
   };
   // Create Pelanggaran
   const handleCreate = () => {
-     console.log(currentPelanggaranData)
-      CreatePelanggaran({
-        ...currentPelanggaranData,
+    console.log(currentPelanggaranData);
+    CreatePelanggaran({
+      ...currentPelanggaranData,
 
-        sanksi: findSanksi(currentPelanggaranData.sanksi),
+      sanksi: findSanksi(currentPelanggaranData.sanksi),
+    })
+      .then((res) => {
+        console.log(res);
+        GetDataPelanggaran();
+        closeCreateModal();
+        clearModal();
+        toast.success("Data berhasil ditambahkan");
       })
-        .then((res) => {
-          console.log(res);
-          GetDataPelanggaran();
-          closeCreateModal();
-          clearModal();
-          toast.success("Data berhasil ditambahkan");
-        })
-        .catch((err) => {
-          toast.error(err.message);
-          clearModal();
-        });
+      .catch((err) => {
+        toast.error(err.message);
+        clearModal();
+      });
   };
   // Update Pelanggaran
   const handleUpdate = (id) => {
@@ -319,6 +331,7 @@ const PelanggaranPage = () => {
             items={paginatedRows}
             isLoading={isLoading}
             loadingContent={<Spinner label="Loading..." />}
+            emptyContent={"Tidak ada data yang ditampilkan"}
           >
             {paginatedRows.map((row) => (
               <TableRow key={row.key}>
@@ -362,7 +375,7 @@ const PelanggaranPage = () => {
                                       handleEdit(row.id);
                                     }}
                                   >
-                                    Edit
+                                    Ubah
                                   </DropdownItem>
                                   <DropdownItem
                                     color="danger"
@@ -400,11 +413,12 @@ const PelanggaranPage = () => {
         isOpen={createModalOpen}
         onOpenChange={onCreateModalOpenChange}
         scrollBehavior={"inside"}
-        size={"5xl"}
+        className="max-w-3xl h-[450px] mx-4 lg:mx-0 lg:h-fit"
+        placement="center"
       >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
-            {currentId ? "Edit Pelanggaran" : "Tambah Pelanggaran"}
+            {currentId ? "Ubah Pelanggaran" : "Tambah Pelanggaran"}
           </ModalHeader>
           <ModalBody>
             <div className="mb-2">
@@ -451,10 +465,15 @@ const PelanggaranPage = () => {
             </div>
             <div className="mb-2">
               <Input
+                disabled
                 type="text"
                 label="Guru BK"
                 variant="bordered"
-                value={currentPelanggaranData.nama_guru_bk}
+                value={
+                  currentPelanggaranData.nama_guru_bk
+                    ? currentPelanggaranData.nama_guru_bk
+                    : namaKaryawan
+                }
                 onChange={(e) => {
                   setCurrentPelanggaranData({
                     ...currentPelanggaranData,
@@ -467,6 +486,7 @@ const PelanggaranPage = () => {
               <Input
                 type="date"
                 variant="bordered"
+                className="w-full"
                 value={currentPelanggaranData.tanggal_pelanggaran}
                 onChange={(e) => {
                   setCurrentPelanggaranData({
@@ -484,7 +504,7 @@ const PelanggaranPage = () => {
                 selectedKeys={currentPelanggaranData.id_list_pelanggaran}
                 className={{ listboxWrapper: "max-h-[400px]" }}
                 variant="bordered"
-                label="list Pelanggaran "
+                label="List Pelanggaran "
                 onSelectionChange={(e) => {
                   const selectedPelanggaran = listPelanggaran.find(
                     (js) => js.id === parseInt(e.currentKey)
@@ -501,31 +521,6 @@ const PelanggaranPage = () => {
                   <SelectItem key={js.id}>{js.pelanggaran}</SelectItem>
                 ))}
               </Select>
-
-              {/* <select
-                value={currentPelanggaranData.id_list_pelanggaran}
-                className="border-2 border-gray-200 py-4 px-2 rounded-lg w-full cursor-pointer text-sm"
-                onChange={(e) => {
-                  const selectedPelanggaran = listPelanggaran.find(
-                    (js) => js.id === parseInt(e.target.value)
-                  );
-
-                  setCurrentPelanggaranData({
-                    ...currentPelanggaranData,
-                    id_list_pelanggaran: e.target.value,
-                    kategori: selectedPelanggaran.kategori.nama_kategori,
-                  });
-                }}
-              >
-                <option hidden className="text-gray-200">
-                  Pilih Pelanggaran
-                </option>
-                {listPelanggaran.map((js) => (
-                  <option value={js.id} key={js.id}>
-                    {js.pelanggaran}
-                  </option>
-                ))}
-              </select> */}
             </div>
             {/* Kategori */}
             <div className="mb-2">
@@ -570,33 +565,9 @@ const PelanggaranPage = () => {
                   <SelectItem key={js.id}>{js.value}</SelectItem>
                 ))}
               </Select>
-              {/* <select
-                value={currentPelanggaranData.jenis_sanksi}
-                className="border-2 border-gray-200 py-4 px-2 rounded-lg w-full cursor-pointer text-sm"
-                onChange={(e) => {
-                  setCurrentPelanggaranData({
-                    ...currentPelanggaranData,
-                    jenis_sanksi: e.target.value,
-                  });
-
-                  getDataSanksi(
-                    e.target.value,
-                    currentPelanggaranData.kategori
-                  );
-                }}
-              >
-                <option hidden className="text-gray-200">
-                  Pilih Jenis Sanksi
-                </option>
-                {jenisSanksi.map((js) => (
-                  <option value={js.label} key={js.label}>
-                    {js.value}
-                  </option>
-                ))}
-              </select> */}
             </div>
-            {/* Sanksi */}
 
+            {/* Sanksi */}
             <div className="mb-2">
               <Select
                 items={listSanksi}
@@ -619,26 +590,6 @@ const PelanggaranPage = () => {
                   <SelectItem key={js.id}>{js.sanksi}</SelectItem>
                 ))}
               </Select>
-              {/* <select
-                value={currentPelanggaranData.jenis}
-                className="border-2 border-gray-200 py-4 px-2 rounded-lg w-full cursor-pointer text-sm"
-                onChange={(e) => {
-                  setCurrentPelanggaranData({
-                    ...currentPelanggaranData,
-                    sanksi: e.target.value,
-                  });
-                }}
-              >
-                <option hidden className="text-gray-200">
-                  Pilih Sanksi
-                </option>
-
-                {listSanksi.map((js) => (
-                  <option value={js.sanksi} key={js.id}>
-                    {js.sanksi}
-                  </option>
-                ))}
-              </select> */}
             </div>
           </ModalBody>
 
@@ -671,7 +622,11 @@ const PelanggaranPage = () => {
       </Modal>
 
       {/* Modal Delete */}
-      <Modal isOpen={deleteModalOpen} onOpenChange={onDeleteModalOpenChange}>
+      <Modal
+        isOpen={deleteModalOpen}
+        onOpenChange={onDeleteModalOpenChange}
+        placement="center"
+      >
         <ModalContent>
           <ModalHeader>Hapus Pelanggaran</ModalHeader>
           <ModalBody>Apakah Anda yakin ingin menghapus data ini?</ModalBody>

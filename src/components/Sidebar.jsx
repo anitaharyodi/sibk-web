@@ -11,6 +11,7 @@ import { User, Link as Link2 } from "@nextui-org/react";
 export default function Sidebar() {
   const [showSidebar, setShowSidebar] = useState("-left-64");
   const navigate = useNavigate();
+  const namaKaryawan = sessionStorage.getItem("namaKaryawan")
 
   return (
     <>
@@ -27,7 +28,7 @@ export default function Sidebar() {
           <div className="w-full mt-4 bg-gray-500 p-2 rounded-xl">
             <User
               className="text-white"
-              name="Rini Ferbianti"
+              name={namaKaryawan}
               description={<span className="text-gray-300">Guru BK</span>}
               avatarProps={{
                 src: assets.AVATAR,

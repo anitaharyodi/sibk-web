@@ -27,6 +27,13 @@ const LoginPage = () => {
     onClose: closeModal,
   } = useDisclosure();
 
+  const handleSaveName = () => {
+    sessionStorage.setItem("namaKaryawan", name);
+    closeModal();
+    setName("");
+    navigation("/pages/home");
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-primary">
       <div className="bg-white p-6 rounded-2xl shadow-md w-full max-w-md max-sm:mx-6">
@@ -114,10 +121,11 @@ const LoginPage = () => {
               Batal
             </button>
             <button
-              className="bg-[#1E2131] text-white w-[200px] h-[40px] rounded-md"
+              className={`${!name ? "bg-gray-400" : "bg-[#1E2131]"} text-white w-[200px] h-[40px] rounded-md`}
               onClick={() => {
-                navigation('/pages/home')
+                handleSaveName()
               }}
+              disabled={!name}
             >
               Simpan
             </button>
