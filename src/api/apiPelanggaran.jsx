@@ -48,6 +48,7 @@ export const CreatePelanggaran = async (data) => {
       tanggal_pelanggaran: data.tanggal_pelanggaran,
       sanksi: data.sanksi,
     });
+    console.log(response);
     return response.data.data;
   } catch (error) {
     throw error.response.data;

@@ -13,12 +13,15 @@ import {
   ModalFooter,
   ModalHeader,
   Pagination,
+  Select,
+  SelectItem,
   Table,
   TableBody,
   TableCell,
   TableColumn,
   TableHeader,
   TableRow,
+  Spinner,
   Textarea,
   getKeyValue,
   useDisclosure,
@@ -31,7 +34,7 @@ import { FaEdit } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
 import { RiDeleteBin6Fill } from "react-icons/ri";
 import DatePicker from "react-datepicker";
-
+import { toast } from "sonner";
 import {
   GetPelanggaran,
   GetListPelanggaran,
@@ -49,6 +52,7 @@ const PelanggaranPage = () => {
   const [dataPelanggaran, setDataPelanggaran] = useState([]);
   const [listPelanggaran, setListPelanggaran] = useState([]);
   const [listSanksi, setListSanksi] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [currentPelanggaranData, setCurrentPelanggaranData] = useState({
     nama_siswa: "",
     kelas: "",
@@ -72,6 +76,20 @@ const PelanggaranPage = () => {
     onOpenChange: onCreateModalOpenChange,
     onClose: closeCreateModal,
   } = useDisclosure();
+
+  const clearModal = () => {
+    setCurrentPelanggaranData({
+      nama_siswa: "",
+      kelas: "",
+      program_keahlian: "",
+      nama_guru_bk: "",
+      id_list_pelanggaran: "",
+      kategori: "",
+      jenis_sanksi: "",
+      sanksi: "",
+      tanggal_pelanggaran: "",
+    });
+  };
 
   const {
     isOpen: deleteModalOpen,
@@ -113,6 +131,7 @@ const PelanggaranPage = () => {
 
     GetPelanggaranById(currentId)
       .then((res) => {
+        console.log(res);
         setCurrentPelanggaranData({
           nama_siswa: res.nama_siswa,
           kelas: res.kelas,
@@ -136,12 +155,14 @@ const PelanggaranPage = () => {
 
   // Get Data Pelanggaran
   const GetDataPelanggaran = () => {
+    setIsLoading(true);
     GetPelanggaran()
       .then((res) => {
         setDataPelanggaran(res);
+        setIsLoading(false);
       })
       .catch((err) => {
-        console.log(err);
+        setIsLoading(false);
       });
   };
 
@@ -163,9 +184,11 @@ const PelanggaranPage = () => {
         GetDataPelanggaran();
         closeDeleteModal();
         setCurrentId(null);
+        toast.success(res.message)
       })
       .catch((err) => {
         console.log(err);
+        toast.error(err.message)
       });
   };
   // Get List Sanksi by Filter
@@ -186,20 +209,11 @@ const PelanggaranPage = () => {
         console.log(res);
         GetDataPelanggaran();
         closeCreateModal();
-        setCurrentPelanggaranData({
-          nama_siswa: "",
-          kelas: "",
-          program_keahlian: "",
-          nama_guru_bk: "",
-          id_list_pelanggaran: "",
-          kategori: "",
-          jenis_sanksi: "",
-          sanksi: "",
-          tanggal_pelanggaran: "",
-        });
+        clearModal();
+        toast.success("Data berhasil ditambahkan")
       })
       .catch((err) => {
-        console.log(err);
+        toast.error(err.message)
       });
   };
   // Update Pelanggaran
@@ -209,20 +223,11 @@ const PelanggaranPage = () => {
         console.log(res);
         GetDataPelanggaran();
         closeCreateModal();
-        setCurrentPelanggaranData({
-          nama_siswa: "",
-          kelas: "",
-          program_keahlian: "",
-          nama_guru_bk: "",
-          id_list_pelanggaran: "",
-          kategori: "",
-          jenis_sanksi: "",
-          sanksi: "",
-          tanggal_pelanggaran: "",
-        });
+        clearModal();
+        toast.success(res.message)
       })
       .catch((err) => {
-        console.log(err);
+        toast.error(err.message)
       });
   };
 
@@ -251,6 +256,7 @@ const PelanggaranPage = () => {
         <button
           className="btn btn-primary rounded-md flex-none px-4 py-2 mt-2 lg:mt-0"
           onClick={() => {
+            clearModal();
             openCreateModal();
           }}
         >
@@ -290,7 +296,11 @@ const PelanggaranPage = () => {
               </TableColumn>
             ))}
           </TableHeader>
-          <TableBody items={paginatedRows}>
+          <TableBody
+            items={paginatedRows}
+            isLoading={isLoading}
+            loadingContent={<Spinner label="Loading..." />}
+          >
             {paginatedRows.map((row) => (
               <TableRow key={row.key}>
                 {columns.map((column) => (
@@ -371,7 +381,7 @@ const PelanggaranPage = () => {
         isOpen={createModalOpen}
         onOpenChange={onCreateModalOpenChange}
         scrollBehavior={"inside"}
-        size={"xl"}
+        size={"5xl"}
       >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
@@ -449,7 +459,31 @@ const PelanggaranPage = () => {
             </div>
             {/* Dropdown List Pelanggaran */}
             <div className="mb-2">
-              <select
+              <Select
+                items={listPelanggaran}
+                placeholder="Pilih Pelanggaran"
+                selectedKeys={currentPelanggaranData.id_list_pelanggaran}
+                className={{ listboxWrapper: "max-h-[400px]" }}
+                variant="bordered"
+                onSelectionChange={(e) => {
+                  const selectedPelanggaran = listPelanggaran.find(
+                    (js) => js.id === parseInt(e.currentKey)
+                  );
+                  setCurrentPelanggaranData({
+                    ...currentPelanggaranData,
+
+                    id_list_pelanggaran: e.currentKey,
+                    kategori: selectedPelanggaran.kategori.nama_kategori,
+                  });
+                }}
+              >
+                {listPelanggaran.map((js) => (
+                  console.log(js),
+                  <SelectItem key={js.id}>{js.pelanggaran}</SelectItem>
+                ))}
+              </Select>
+
+              {/* <select
                 value={currentPelanggaranData.id_list_pelanggaran}
                 className="border-2 border-gray-200 py-4 px-2 rounded-lg w-full cursor-pointer text-sm"
                 onChange={(e) => {
@@ -472,7 +506,7 @@ const PelanggaranPage = () => {
                     {js.pelanggaran}
                   </option>
                 ))}
-              </select>
+              </select> */}
             </div>
             {/* Kategori */}
             <div className="mb-2">
@@ -483,6 +517,7 @@ const PelanggaranPage = () => {
                 variant="bordered"
                 value={currentPelanggaranData.kategori}
                 onChange={(e) => {
+
                   setCurrentPelanggaranData({
                     ...currentPelanggaranData,
                     kategori: e.target.value,
@@ -490,13 +525,37 @@ const PelanggaranPage = () => {
 
                   getDataSanksi(
                     currentPelanggaranData.jenis_sanksi,
-                    e.target.value
+                    e.currentKey
                   );
                 }}
               />
             </div>
             {/* Jenis Sanksi */}
             <div className="mb-2">
+              {/* <Select
+                items={jenisSanksi}
+                placeholder="Pilih Jenis Sanksi"
+                selectedKeys={currentPelanggaranData.jenis_sanksi}
+                variant="bordered"
+                onSelectionChange={(e) => {
+                  console.log(e);
+                  setCurrentPelanggaranData({
+                    ...currentPelanggaranData,
+                    jenis_sanksi: e.label,
+                  });
+
+                  getDataSanksi(
+                    e.label,
+                    currentPelanggaranData.kategori
+                  );
+                }}
+              >
+                {jenisSanksi.map((js) => (
+                  <SelectItem key={js.id}>
+                    {js.value}
+                  </SelectItem>
+                ))}
+              </Select> */}
               <select
                 value={currentPelanggaranData.jenis_sanksi}
                 className="border-2 border-gray-200 py-4 px-2 rounded-lg w-full cursor-pointer text-sm"
@@ -553,15 +612,7 @@ const PelanggaranPage = () => {
               onClick={() => {
                 setCurrentId(null);
                 closeCreateModal();
-                setCurrentPelanggaranData({
-                  namaSiswa: "",
-                  kelas: "",
-                  programKeahlian: "",
-                  guruBK: "",
-                  pelanggaran: "",
-                  kategori: "",
-                  sanksi: "",
-                });
+                clearModal();
               }}
             >
               Batal
