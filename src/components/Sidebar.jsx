@@ -12,6 +12,7 @@ export default function Sidebar() {
   const [showSidebar, setShowSidebar] = useState("-left-64");
   const navigate = useNavigate();
   const namaKaryawan = sessionStorage.getItem("namaKaryawan")
+  const role = sessionStorage.getItem("role")
 
   return (
     <>
@@ -29,7 +30,7 @@ export default function Sidebar() {
             <User
               className="text-white"
               name={namaKaryawan}
-              description={<span className="text-gray-300">Guru BK</span>}
+              description={<span className="text-gray-300">{role}</span>}
               avatarProps={{
                 src: assets.AVATAR,
               }}

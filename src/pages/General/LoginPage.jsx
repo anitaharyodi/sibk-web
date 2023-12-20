@@ -3,6 +3,8 @@ import assets from "../../assets";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import { Input, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from "@nextui-org/react";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
+import { Login } from "../../api/apiAuth";
 
 const LoginPage = () => {
     const navigation = useNavigate()
@@ -27,11 +29,29 @@ const LoginPage = () => {
     onClose: closeModal,
   } = useDisclosure();
 
+  const handleLogin = () => {
+      Login({
+        email: email,
+        password : password
+      })
+        .then((res) => {
+          openModal()
+          sessionStorage.setItem("role", res.user.role);
+          sessionStorage.setItem("token", res.token)
+        })
+        .catch((err) => {
+          toast.error(err.message);
+          setEmail("")
+          setPassword("")
+        });
+  }
+
   const handleSaveName = () => {
     sessionStorage.setItem("namaKaryawan", name);
     closeModal();
     setName("");
     navigation("/pages/home");
+    toast.success("Berhasil Login");
   };
 
   return (
@@ -85,7 +105,7 @@ const LoginPage = () => {
           } text-white rounded-md ${
             isDisable ? "hover:bg-gray-400" : "hover:bg-[#81A100]"
           }  transition duration-300 mt-6`}
-          onClick={() => openModal()}
+          onClick={() => handleLogin()}
         >
           Masuk
         </button>
