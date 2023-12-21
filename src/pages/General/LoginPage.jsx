@@ -35,9 +35,9 @@ const LoginPage = () => {
         password : password
       })
         .then((res) => {
-          openModal()
           sessionStorage.setItem("role", res.user.role);
           sessionStorage.setItem("token", res.token)
+          openModal();
         })
         .catch((err) => {
           toast.error(err.message);
