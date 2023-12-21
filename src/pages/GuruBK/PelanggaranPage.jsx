@@ -228,7 +228,7 @@ const PelanggaranPage = () => {
     console.log(currentPelanggaranData);
     CreatePelanggaran({
       ...currentPelanggaranData,
-
+      nama_guru_bk: namaKaryawan,
       sanksi: findSanksi(currentPelanggaranData.sanksi),
     })
       .then((res) => {
@@ -247,6 +247,7 @@ const PelanggaranPage = () => {
   const handleUpdate = (id) => {
     UpdatePelanggaran(id, {
       ...currentPelanggaranData,
+      nama_guru_bk: namaKaryawan,
       sanksi: findSanksi(currentPelanggaranData.sanksi),
     })
       .then((res) => {

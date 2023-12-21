@@ -244,11 +244,17 @@ const DOPage = () => {
                         case "actions":
                           return (
                             <div className="relative flex items-center">
-                                  <Button isIconOnly size="md" variant="light" color="warning" onClick={() => {
-                                      handleEdit(row.id)
-                                    }}>
-                                    <FaEdit className="text-warning-500" />
-                                  </Button>
+                              <Button
+                                isIconOnly
+                                size="md"
+                                variant="light"
+                                color="warning"
+                                onClick={() => {
+                                  handleEdit(row.id);
+                                }}
+                              >
+                                <FaEdit className="text-warning-500" />
+                              </Button>
                             </div>
                           );
 
@@ -278,7 +284,9 @@ const DOPage = () => {
       >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
-            {currentId ? "Ubah Data Keluar/Pindah" : "Tambah Data Keluar/Pindah"}
+            {currentId
+              ? "Ubah Data Keluar/Pindah"
+              : "Tambah Data Keluar/Pindah"}
           </ModalHeader>
           <ModalBody>
             <div className="mb-2">

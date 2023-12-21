@@ -3,6 +3,8 @@ import assets from "../../assets";
 import CardCustom from "../../components/Card";
 
 const Home = () => {
+  const role = sessionStorage.getItem("role");
+
   const cardData = [
     {
       title: "Pelanggaran",
@@ -38,6 +40,16 @@ const Home = () => {
     },
   ];
 
+  const filteredCardData = cardData.filter((data) => {
+    if (role === "Guru BK") {
+      return true;
+    } else if (role === "Guru Piket") {
+      return data.title === "Keterlambatan" || data.title === "Perijinan";
+    } else {
+      return false;
+    }
+  });
+
   return (
     <div>
       <img
@@ -51,7 +63,7 @@ const Home = () => {
         Silakan pilih menu yang ingin diakses :
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 mx-auto">
-        {cardData.map((data, index) => (
+        {filteredCardData.map((data, index) => (
           <CardCustom
             key={index}
             title={data.title}

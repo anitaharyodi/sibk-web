@@ -1,13 +1,21 @@
 import React, { useEffect, useState } from "react";
 import assets from "../../assets";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
-import { Input, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from "@nextui-org/react";
+import {
+  Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  useDisclosure,
+} from "@nextui-org/react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { Login } from "../../api/apiAuth";
 
 const LoginPage = () => {
-    const navigation = useNavigate()
+  const navigation = useNavigate();
   const [isDisable, setIsDisable] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,21 +38,21 @@ const LoginPage = () => {
   } = useDisclosure();
 
   const handleLogin = () => {
-      Login({
-        email: email,
-        password : password
+    Login({
+      email: email,
+      password: password,
+    })
+      .then((res) => {
+        sessionStorage.setItem("role", res.user.role);
+        sessionStorage.setItem("token", res.token);
+        openModal();
       })
-        .then((res) => {
-          sessionStorage.setItem("role", res.user.role);
-          sessionStorage.setItem("token", res.token)
-          openModal();
-        })
-        .catch((err) => {
-          toast.error(err.message);
-          setEmail("")
-          setPassword("")
-        });
-  }
+      .catch((err) => {
+        toast.error(err.message);
+        setEmail("");
+        setPassword("");
+      });
+  };
 
   const handleSaveName = () => {
     sessionStorage.setItem("namaKaryawan", name);
@@ -141,9 +149,11 @@ const LoginPage = () => {
               Batal
             </button>
             <button
-              className={`${!name ? "bg-gray-400" : "bg-[#1E2131]"} text-white w-[200px] h-[40px] rounded-md`}
+              className={`${
+                !name ? "bg-gray-400" : "bg-[#1E2131]"
+              } text-white w-[200px] h-[40px] rounded-md`}
               onClick={() => {
-                handleSaveName()
+                handleSaveName();
               }}
               disabled={!name}
             >
