@@ -28,6 +28,7 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import { CiSearch } from "react-icons/ci";
 import { FaEdit, FaUserTimes } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
+import { IoMdDownload } from "react-icons/io";
 import { RiDeleteBin6Fill } from "react-icons/ri";
 import { toast } from "sonner";
 import {
@@ -38,6 +39,7 @@ import {
   UpdateKetidakhadiran,
 } from "../../api/apiKetidakhadiran";
 import moment from "moment";
+import { getLaporanDataKetidakhadiran } from "../../api/apiLaporan";
 
 const KetidakhadiranPage = () => {
   const [search, setSearch] = useState("");
@@ -45,6 +47,7 @@ const KetidakhadiranPage = () => {
   const [currentId, setCurrentId] = useState(null);
   const [dataKetidakhadiran, setDataKetidakhadiran] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [dateFilter, setDateFilter] = useState("");
   const [currentKetidakhadiranData, setCurrentKetidakhadiranData] = useState({
     nama_siswa: "",
     kelas: "",
@@ -194,6 +197,16 @@ const KetidakhadiranPage = () => {
       });
   };
 
+  const cetakLaporan = (date) => {
+    getLaporanDataKetidakhadiran(date)
+      .then(() => {
+        toast.success("berhasil download pdf");
+      })
+      .catch(() => {
+        toast.error("gagal download pdf");
+      });
+  };
+
   useEffect(() => {
     GetDataKetidakhadiran();
   }, []);
@@ -215,16 +228,33 @@ const KetidakhadiranPage = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <button
-          className="btn btn-primary rounded-md flex-none px-4 py-2 mt-2 lg:mt-0"
-          onClick={() => {
-            clearModal();
-            openCreateModal();
-          }}
-        >
-          <IoMdAdd className="mr-2" />
-          Tambah
-        </button>
+        <div className="flex justify-end flex-col md:flex-row md:items-center w-full">
+          <Input
+            label="Tanggal Cetak Laporan"
+            type="month"
+            className="me-2 w-full md:max-w-[30%] mb-2 md:mb-0 text-medium"
+            onChange={(e) => setDateFilter(e.target.value)}
+          ></Input>
+          {dateFilter && (
+            <button
+              className="btn btn-primary rounded-md flex-none px-4 py-2 mt-2 me-1 lg:mt-0"
+              onClick={() => cetakLaporan(dateFilter)}
+            >
+              <IoMdDownload className="mr-2" />
+              Download PDF
+            </button>
+          )}
+          <button
+            className="btn btn-primary rounded-md flex-none px-4 py-2 mt-2 lg:mt-0"
+            onClick={() => {
+              clearModal();
+              openCreateModal();
+            }}
+          >
+            <IoMdAdd className="mr-2" />
+            Tambah
+          </button>
+        </div>
       </div>
 
       <div className="mt-8">

@@ -34,9 +34,11 @@ import { FaEdit } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
 import { RiDeleteBin6Fill } from "react-icons/ri";
 import DatePicker from "react-datepicker";
+import { IoMdDownload } from "react-icons/io";
 import { toast } from "sonner";
 import { CreateDO, GetDO, GetDOById, UpdateDO } from "../../api/apiDO";
 import { MdMoveDown } from "react-icons/md";
+import { getLaporanDataDO } from "../../api/apiLaporan";
 
 const DOPage = () => {
   const [search, setSearch] = useState("");
@@ -44,6 +46,7 @@ const DOPage = () => {
   const [currentId, setCurrentId] = useState(null);
   const [dataDO, setDataDO] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [dateFilter, setDateFilter] = useState("");
   const [currentDOData, setCurrentDOData] = useState({
     nama_siswa: "",
     kelas: "",
@@ -165,6 +168,16 @@ const DOPage = () => {
       });
   };
 
+  const cetakLaporan = (date) => {
+    getLaporanDataDO(date)
+      .then(() => {
+        toast.success("berhasil download pdf");
+      })
+      .catch(() => {
+        toast.error("gagal download pdf");
+      });
+  };
+
   useEffect(() => {
     GetDataDO();
   }, []);
@@ -186,16 +199,33 @@ const DOPage = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <button
-          className="btn btn-primary rounded-md flex-none px-4 py-2 mt-2 lg:mt-0"
-          onClick={() => {
-            clearModal();
-            openCreateModal();
-          }}
-        >
-          <IoMdAdd className="mr-2" />
-          Tambah
-        </button>
+        <div className="flex justify-end flex-col md:flex-row md:items-center w-full">
+          <Input
+            label="Tanggal Cetak Laporan"
+            type="month"
+            className="me-2 w-full md:max-w-[30%] mb-2 md:mb-0 text-medium"
+            onChange={(e) => setDateFilter(e.target.value)}
+          ></Input>
+          {dateFilter && (
+            <button
+              className="btn btn-primary rounded-md flex-none px-4 py-2 mt-2 me-1 lg:mt-0"
+              onClick={() => cetakLaporan(dateFilter)}
+            >
+              <IoMdDownload className="mr-2" />
+              Download PDF
+            </button>
+          )}
+          <button
+            className="btn btn-primary rounded-md flex-none px-4 py-2 mt-2 lg:mt-0"
+            onClick={() => {
+              clearModal();
+              openCreateModal();
+            }}
+          >
+            <IoMdAdd className="mr-2" />
+            Tambah
+          </button>
+        </div>
       </div>
 
       <div className="mt-8">

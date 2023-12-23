@@ -38,6 +38,7 @@ import {
   GetKeterlambatanById,
   UpdateKeterlambatan,
 } from "../../api/apiKeterlambatan";
+import { getLaporanDataTerlambat } from "../../api/apiLaporan";
 
 const KeterlambatanPage = () => {
   const namaKaryawan = sessionStorage.getItem("namaKaryawan");
@@ -47,6 +48,7 @@ const KeterlambatanPage = () => {
   const [currentId, setCurrentId] = useState(null);
   const [dataKeterlambatan, setDataKeterlambatan] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [date, setDate] = useState("");
   const [currentKeterlambatanData, setCurrentKeterlambatanData] = useState({
     nama_siswa: "",
     kelas: "",
@@ -203,6 +205,16 @@ const KeterlambatanPage = () => {
       });
   };
 
+   const cetakLaporan = (date) => {
+     getLaporanDataTerlambat(date)
+       .then(() => {
+         toast.success("berhasil download pdf");
+       })
+       .catch(() => {
+         toast.error("gagal download pdf");
+       });
+   };
+
   useEffect(() => {
     GetDataKeterlambatan();
   }, []);
@@ -236,15 +248,23 @@ const KeterlambatanPage = () => {
             Tambah
           </button>
         ) : (
-          <button
-            className="btn btn-primary rounded-md flex-none px-4 py-2 mt-2 lg:mt-0"
-            // onClick={() => {
-
-            // }}
-          >
-            <IoMdDownload className="mr-2" />
-            Download PDF
-          </button>
+          <div className="flex justify-end flex-col md:flex-row md:items-center w-full">
+            <Input
+              label="Tanggal Cetak Laporan"
+              type="month"
+              className="me-2 w-full md:max-w-[30%] mb-2 md:mb-0 text-medium"
+              onChange={(e) => setDate(e.target.value)}
+            ></Input>
+            {date && (
+              <button
+                className="btn btn-primary rounded-md flex-none px-4 py-2 mt-2 lg:mt-0"
+                onClick={() => cetakLaporan(date)}
+              >
+                <IoMdDownload className="mr-2" />
+                Download PDF
+              </button>
+            )}
+          </div>
         )}
       </div>
 
